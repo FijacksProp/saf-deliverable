@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A responsive weekly class timetable with search, filters, live class status, and schedule conflict detection.">
+  <title>Weekline — Class Timetable</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#timetable">Skip to timetable</a>
+
+  <header class="site-header">
+    <a class="brand" href="#" aria-label="Weekline home">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span>Weekline</span>
+    </a>
+
+    <div class="header-date">
+      <span id="full-date">—</span>
+      <strong id="live-time">—</strong>
+    </div>
+
+    <button class="avatar" type="button" aria-label="Student profile">AO</button>
+  </header>
+
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Computer Science · Year 3</p>
+        <h1 id="page-title">My class week</h1>
+        <p class="intro-copy">Everything scheduled from Monday to Friday, with free periods left clear.</p>
+      </div>
+
+      <aside class="now-card" id="now-card" aria-live="polite">
+        <span class="now-indicator" aria-hidden="true"></span>
+        <div>
+          <p id="now-label">Checking your schedule</p>
+          <strong id="now-title">Just a moment…</strong>
+          <span id="now-meta"></span>
+        </div>
+      </aside>
+    </section>
+
+    <section class="toolbar" aria-label="Timetable controls">
+      <label class="search-box">
+        <span class="sr-only">Search classes</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
+        <input id="search-input" type="search" placeholder="Search subject or lecturer" autocomplete="off">
+        <kbd>/</kbd>
+      </label>
+
+      <label class="select-wrap">
+        <span class="sr-only">Filter by subject</span>
+        <select id="subject-filter">
+          <option value="all">All subjects</option>
+        </select>
+      </label>
+
+      <div class="view-switch" aria-label="View options">
+        <button class="active" type="button" data-view="week">Week</button>
+        <button type="button" data-view="day">Day</button>
+      </div>
+      <button class="add-class-button" type="button" id="add-class">+ Add class</button>
+    </section>
+
+    <nav class="day-tabs" id="day-tabs" aria-label="Choose a day"></nav>
+
+    <section class="schedule-shell" id="timetable" aria-labelledby="schedule-heading">
+      <div class="schedule-heading-row">
+        <div>
+          <p class="section-kicker">Weekly overview</p>
+          <h2 id="schedule-heading">August 10–14</h2>
+        </div>
+        <div class="legend" aria-label="Class type legend">
+          <span><i class="lecture"></i> Lecture</span>
+          <span><i class="practical"></i> Practical</span>
+          <span><i class="seminar"></i> Seminar</span>
+        </div>
+      </div>
+
+      <div class="schedule-scroll" tabindex="0" aria-label="Scrollable weekly timetable">
+        <div class="schedule-grid" id="schedule-grid" role="grid" aria-label="Weekly class timetable"></div>
+      </div>
+
+      <div class="empty-state" id="empty-state" hidden>
+        <span aria-hidden="true">⌕</span>
+        <h3>No classes found</h3>
+        <p>Try a different subject, lecturer, or day.</p>
+        <button type="button" id="clear-filters">Clear filters</button>
+      </div>
+    </section>
+
+    <div class="data-actions">
+      <p>Changes are saved on this device.</p>
+      <button type="button" id="reset-data">Restore sample timetable</button>
+    </div>
+  </main>
+
+  <dialog class="class-dialog" id="class-dialog">
+    <button class="dialog-close" type="button" aria-label="Close class details">×</button>
+    <div class="dialog-accent"></div>
+    <p class="dialog-type" id="dialog-type"></p>
+    <h2 id="dialog-title"></h2>
+    <dl>
+      <div><dt>Lecturer</dt><dd id="dialog-teacher"></dd></div>
+      <div><dt>Time</dt><dd id="dialog-time"></dd></div>
+      <div><dt>Location</dt><dd id="dialog-room"></dd></div>
+      <div><dt>Class code</dt><dd id="dialog-code"></dd></div>
+    </dl>
+    <a class="primary-button dialog-link" id="dialog-link" href="#">Open virtual classroom <span aria-hidden="true">↗</span></a>
+    <div class="dialog-actions">
+      <button type="button" id="edit-class">Edit class</button>
+      <button type="button" class="danger-button" id="delete-class">Delete</button>
+    </div>
+  </dialog>
+
+  <dialog class="class-dialog form-dialog" id="class-form-dialog">
+    <button class="dialog-close form-close" type="button" aria-label="Close form">×</button>
+    <div class="dialog-accent"></div>
+    <p class="dialog-type" id="form-kicker">New class</p>
+    <h2 id="form-title">Add to timetable</h2>
+    <form id="class-form">
+      <input type="hidden" id="class-id">
+      <div class="form-grid">
+        <label class="full-field">Subject<input id="class-subject" required maxlength="60" placeholder="e.g. Data Structures"></label>
+        <label>Class code<input id="class-code" required maxlength="15" placeholder="CSC 301"></label>
+        <label>Lecturer<input id="class-teacher" required maxlength="60" placeholder="Lecturer's name"></label>
+        <label>Day<select id="class-day" required><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option></select></label>
+        <label>Class type<select id="class-type" required><option value="lecture">Lecture</option><option value="practical">Practical</option><option value="seminar">Seminar</option></select></label>
+        <label>Start time<input id="class-start" type="time" min="08:00" max="17:00" step="1800" required></label>
+        <label>End time<input id="class-end" type="time" min="08:00" max="17:00" step="1800" required></label>
+        <label class="full-field">Room or meeting location<input id="class-room" required maxlength="60" placeholder="Virtual Room A"></label>
+      </div>
+      <p class="form-error" id="form-error" role="alert"></p>
+      <button class="primary-button form-submit" type="submit">Save class</button>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
