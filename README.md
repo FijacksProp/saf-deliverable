@@ -15,7 +15,7 @@ The deployed application is intentionally static, so it can run on Netlify witho
 - Add, edit, and remove timetable entries
 - Simple overlap prevention when saving a class
 - Browser storage so changes remain after a refresh
-- One-click restoration of the sample timetable
+- One-click clearing of the timetable
 - Responsive layout for desktop, tablet, and mobile
 - Python validation and analysis with unit tests
 
@@ -67,11 +67,11 @@ The command exits with status `1` when the JSON is malformed or a record has an 
 
 ## Manage the timetable
 
-Use **Add class** to create a timetable entry. Select any class card to view its details, edit it, or remove it. The form prevents an end time earlier than the start time and warns when a class overlaps an existing entry on the same day.
+The project starts with an empty timetable. Use **Add class** to create the first entry. Select any class card to view its details, edit it, or remove it. The form prevents an end time earlier than the start time and warns when a class overlaps an existing entry on the same day.
 
-Changes are stored in the browser with `localStorage`, so no account or server is required. They belong to that browser and device. Use **Restore sample timetable** below the grid to discard local changes.
+Changes are stored in the browser with `localStorage`, so no account or server is required. They belong to that browser and device. Use **Clear timetable** below the grid to remove all locally saved classes.
 
-The original sample classes are stored in `data/timetable.json`. Each record uses this shape:
+The `data/timetable.json` file begins as an empty array (`[]`). Classes created through the interface use this shape:
 
 Classes are stored in `data/timetable.json`. Each record uses this shape:
 

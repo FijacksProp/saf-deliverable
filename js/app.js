@@ -4,6 +4,7 @@ const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 const START_HOUR = 8;
 const END_HOUR = 17;
+const STORAGE_KEY = "weekline-classes-v2";
 
 const state = {
   classes: [],
@@ -69,7 +70,7 @@ function bindEvents() {
     button.addEventListener("click", () => setView(button.dataset.view));
   });
 
-  document.querySelector("#clear-filters").addEventListener("click", clearFilters);
+  document.querySelector("#empty-action").addEventListener("click", handleEmptyAction);
   document.querySelector("#add-class").addEventListener("click", () => openClassForm());
   document.querySelector("#edit-class").addEventListener("click", editActiveClass);
   document.querySelector("#delete-class").addEventListener("click", deleteActiveClass);
@@ -151,7 +152,6 @@ function filteredClasses() {
 }
 
 function renderSchedule() {
-  if (!state.classes.length) return;
   const shownDays = state.view === "day" ? [state.selectedDay] : DAYS;
   const visibleClasses = filteredClasses();
   const fragment = document.createDocumentFragment();
@@ -201,6 +201,31 @@ function renderSchedule() {
   elements.grid.append(fragment);
   elements.grid.hidden = visibleClasses.length === 0;
   elements.empty.hidden = visibleClasses.length > 0;
+  updateEmptyState();
+}
+
+function updateEmptyState() {
+  const hasClasses = state.classes.length > 0;
+  const title = document.querySelector("#empty-title");
+  const copy = document.querySelector("#empty-copy");
+  const action = document.querySelector("#empty-action");
+  const icon = document.querySelector("#empty-icon");
+  if (!hasClasses) {
+    icon.textContent = "+";
+    title.textContent = "Your timetable is empty";
+    copy.textContent = "Add your first class to get started.";
+    action.textContent = "Add a class";
+  } else {
+    icon.textContent = "⌕";
+    title.textContent = "No classes found";
+    copy.textContent = "Try a different subject, lecturer, or day.";
+    action.textContent = "Clear filters";
+  }
+}
+
+function handleEmptyAction() {
+  if (state.classes.length) clearFilters();
+  else openClassForm();
 }
 
 function createClassCard(item, column) {
@@ -331,12 +356,14 @@ function colorForSubject(subject) {
 }
 
 function persistClasses() {
-  localStorage.setItem("weekline-classes", JSON.stringify(state.classes));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.classes));
 }
 
 function loadSavedClasses(samples) {
   try {
-    const saved = JSON.parse(localStorage.getItem("weekline-classes"));
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === null) return samples;
+    const saved = JSON.parse(stored);
     return Array.isArray(saved) ? saved : samples;
   } catch {
     return samples;
@@ -344,12 +371,15 @@ function loadSavedClasses(samples) {
 }
 
 async function resetTimetable() {
-  if (!window.confirm("Restore the original sample timetable? Your changes will be removed.")) return;
-  const response = await fetch("data/timetable.json");
-  state.classes = await response.json();
-  localStorage.removeItem("weekline-classes");
+  if (!state.classes.length) {
+    showToast("The timetable is already empty.");
+    return;
+  }
+  if (!window.confirm("Clear every class from the timetable?")) return;
+  state.classes = [];
+  persistClasses();
   refreshInterface();
-  showToast("Sample timetable restored.");
+  showToast("Timetable cleared.");
 }
 
 function refreshInterface() {
@@ -381,6 +411,13 @@ function updateClock() {
 }
 
 function updateCurrentClass() {
+  if (!state.classes.length) {
+    elements.nowCard.classList.add("is-free");
+    document.querySelector("#now-label").textContent = "No classes yet";
+    document.querySelector("#now-title").textContent = "Build your timetable";
+    document.querySelector("#now-meta").textContent = "Add a class to get started.";
+    return;
+  }
   const now = new Date();
   const today = DAYS[now.getDay() - 1];
   const minutes = now.getHours() * 60 + now.getMinutes();
