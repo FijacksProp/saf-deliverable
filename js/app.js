@@ -12,7 +12,8 @@ const state = {
   subject: "all",
   view: window.innerWidth <= 800 ? "day" : "week",
   selectedDay: preferredDay()
-  ,activeClassId: null
+  ,activeClassId: null,
+  selectedWeek: mondayOf(new Date())
 };
 
 const elements = {
@@ -75,6 +76,10 @@ function bindEvents() {
   document.querySelector("#edit-class").addEventListener("click", editActiveClass);
   document.querySelector("#delete-class").addEventListener("click", deleteActiveClass);
   document.querySelector("#reset-data").addEventListener("click", resetTimetable);
+  document.querySelector("#previous-week").addEventListener("click", () => changeWeek(-7));
+  document.querySelector("#next-week").addEventListener("click", () => changeWeek(7));
+  document.querySelector("#current-week").addEventListener("click", goToCurrentWeek);
+  document.querySelector("#week-picker").addEventListener("change", chooseWeekFromDate);
   document.querySelector("#class-form").addEventListener("submit", saveClassFromForm);
   document.querySelector(".form-close").addEventListener("click", () => elements.formDialog.close());
   document.querySelector(".dialog-close").addEventListener("click", () => elements.dialog.close());
@@ -166,10 +171,10 @@ function renderSchedule() {
   shownDays.forEach((day, index) => {
     const heading = document.createElement("div");
     heading.className = "day-heading";
-    if (isToday(day)) heading.classList.add("today");
+    if (isActualToday(day)) heading.classList.add("today");
     heading.style.gridArea = `1 / ${index + 2}`;
     heading.setAttribute("role", "columnheader");
-    heading.innerHTML = `<strong>${day}</strong><span>${isToday(day) ? "Today" : dateForDay(day)}</span>`;
+    heading.innerHTML = `<strong>${day}</strong><span>${isActualToday(day) ? "Today" : dateForDay(day)}</span>`;
     fragment.append(heading);
   });
 
@@ -185,7 +190,7 @@ function renderSchedule() {
     shownDays.forEach((day, index) => {
       const cell = document.createElement("div");
       cell.className = "grid-cell";
-      if (isToday(day)) cell.classList.add("is-today");
+      if (isActualToday(day)) cell.classList.add("is-today");
       cell.style.gridArea = `${row} / ${index + 2} / span 2`;
       cell.setAttribute("role", "gridcell");
       fragment.append(cell);
@@ -440,20 +445,61 @@ function updateCurrentClass() {
 
 
 function setWeekHeading() {
-  const now = new Date();
-  const monday = mondayOf(now);
+  const monday = new Date(state.selectedWeek);
   const friday = new Date(monday);
   friday.setDate(monday.getDate() + 4);
   const sameMonth = monday.getMonth() === friday.getMonth();
   const start = new Intl.DateTimeFormat("en", { month: "long", day: "numeric" }).format(monday);
   const end = new Intl.DateTimeFormat("en", sameMonth ? { day: "numeric" } : { month: "long", day: "numeric" }).format(friday);
   document.querySelector("#schedule-heading").textContent = `${start}–${end}`;
+  document.querySelector("#week-picker").value = toDateInput(monday);
+  document.querySelector("#current-week").classList.toggle("is-current-week", isViewingCurrentWeek());
 }
 
 function dateForDay(day) {
-  const date = mondayOf(new Date());
+  const date = new Date(state.selectedWeek);
   date.setDate(date.getDate() + DAYS.indexOf(day));
   return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(date);
+}
+
+function changeWeek(days) {
+  const nextWeek = new Date(state.selectedWeek);
+  nextWeek.setDate(nextWeek.getDate() + days);
+  state.selectedWeek = nextWeek;
+  refreshSelectedWeek();
+}
+
+function goToCurrentWeek() {
+  state.selectedWeek = mondayOf(new Date());
+  state.selectedDay = preferredDay();
+  refreshSelectedWeek();
+}
+
+function chooseWeekFromDate(event) {
+  if (!event.target.value) return;
+  const [year, month, day] = event.target.value.split("-").map(Number);
+  const chosenDate = new Date(year, month - 1, day);
+  state.selectedWeek = mondayOf(chosenDate);
+  const chosenDayIndex = chosenDate.getDay() - 1;
+  if (DAYS[chosenDayIndex]) state.selectedDay = DAYS[chosenDayIndex];
+  refreshSelectedWeek();
+}
+
+function refreshSelectedWeek() {
+  setWeekHeading();
+  renderDayTabs();
+  renderSchedule();
+}
+
+function isViewingCurrentWeek() {
+  return state.selectedWeek.getTime() === mondayOf(new Date()).getTime();
+}
+
+function toDateInput(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function mondayOf(date) {
@@ -464,9 +510,9 @@ function mondayOf(date) {
   return result;
 }
 
-function isToday(day) { return DAYS[new Date().getDay() - 1] === day; }
+function isActualToday(day) { return isViewingCurrentWeek() && DAYS[new Date().getDay() - 1] === day; }
 function isCurrent(item) {
-  if (!isToday(item.day)) return false;
+  if (!isActualToday(item.day)) return false;
   const now = new Date();
   const minute = now.getHours() * 60 + now.getMinutes();
   return minute >= toMinutes(item.start) && minute < toMinutes(item.end);

@@ -73,10 +73,22 @@
           <p class="section-kicker">Weekly overview</p>
           <h2 id="schedule-heading">August 10–14</h2>
         </div>
-        <div class="legend" aria-label="Class type legend">
-          <span><i class="lecture"></i> Lecture</span>
-          <span><i class="practical"></i> Practical</span>
-          <span><i class="seminar"></i> Seminar</span>
+        <div class="week-tools">
+          <div class="week-navigation" aria-label="Change displayed week">
+            <button type="button" id="previous-week" aria-label="Previous week">←</button>
+            <button type="button" id="current-week">Today</button>
+            <label class="calendar-picker" title="Choose a date">
+              <span aria-hidden="true">▦</span>
+              <span class="sr-only">Choose a date</span>
+              <input type="date" id="week-picker">
+            </label>
+            <button type="button" id="next-week" aria-label="Next week">→</button>
+          </div>
+          <div class="legend" aria-label="Class type legend">
+            <span><i class="lecture"></i> Lecture</span>
+            <span><i class="practical"></i> Practical</span>
+            <span><i class="seminar"></i> Seminar</span>
+          </div>
         </div>
       </div>
 

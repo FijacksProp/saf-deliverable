@@ -7,6 +7,7 @@ The deployed application is intentionally static, so it can run on Netlify witho
 ## Features
 
 - Weekly CSS Grid timetable with a focused single-day view
+- Previous, next, Today, and calendar-based week navigation
 - Search by subject, lecturer, or class code
 - Subject filtering with instant local updates
 - Live current-class and next-class status
@@ -70,6 +71,8 @@ The command exits with status `1` when the JSON is malformed or a record has an 
 The project starts with an empty timetable. Use **Add class** to create the first entry. Select any class card to view its details, edit it, or remove it. The form prevents an end time earlier than the start time and warns when a class overlaps an existing entry on the same day.
 
 Changes are stored in the browser with `localStorage`, so no account or server is required. They belong to that browser and device. Use **Clear timetable** below the grid to remove all locally saved classes.
+
+Classes follow a repeating Monday-to-Friday timetable. Moving to another week changes the displayed dates, but it does not delete or duplicate the saved classes. Current-day and current-period highlighting only appears while viewing the actual current week.
 
 The `data/timetable.json` file begins as an empty array (`[]`). Classes created through the interface use this shape:
 
